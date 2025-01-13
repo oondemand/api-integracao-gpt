@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cst-rakuten-backend
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cst-rakuten-backend
+  template:
+    metadata:
+      labels:
+        app: cst-rakuten-backend
+    spec:
+      containers:
+        - name: cst-rakuten-backend-container
+          image: registry.digitalocean.com/oondemand/cst-rakuten-backend:1.2.0
+          ports:
+            - containerPort: 4000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "0.1"
+            limits:
+              memory: "2048Mi"
+              cpu: "2"
