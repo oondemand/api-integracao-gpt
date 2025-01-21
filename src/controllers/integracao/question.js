@@ -34,99 +34,92 @@ export const question = async (req, res, next) => {
     const { question, templateEjs, omieVar, systemVar, prompts } =
       bodySchema.parse(req.body);
 
-    const findPrompt = ({ cod }) => {
-      const prompt = prompts.find((e) => e.codigo === cod);
-      return { role: prompt?.tipo, content: prompt?.conteudo };
-    };
+    const concatenatedMessages = prompts.map((prompt) => {
+      if (prompt.codigo === "CONTEXTO_VARIAVEIS_OMIE" && omieVar) {
+        prompt.conteudo = prompt.conteudo + omieVar;
+      }
 
-    const MENSAGEM_DE_CONTEXTO_INICIALIZACAO = findPrompt({
-      cod: "MENSAGEM_DE_CONTEXTO_INICIALIZACAO",
+      if (prompt.codigo === "CONTEXTO_VARIAVEIS_TEMPLATE" && templateEjs) {
+        prompt.conteudo = prompt.conteudo + templateEjs;
+      }
+
+      if (prompt.codigo === "CONTEXTO_VARIAVEIS_SISTEMA" && systemVar) {
+        prompt.conteudo = prompt.conteudo + systemVar;
+      }
+
+      if (!req.file && prompt.codigo === "CONTEXTO_DE_CHAT") {
+        prompt.conteudo = prompt.conteudo + question;
+      }
+
+      if (req.file && prompt.codigo === "CONTEXTO_DE_IMAGEM") {
+        prompt.conteudo = [
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:image/png;base64,${req.file.buffer.toString(
+                "base64"
+              )}`,
+            },
+          },
+          { type: "text", text: question ? question : prompt.conteudo },
+        ];
+      }
+
+      return prompt;
     });
 
-    const CONTEXTO_DE_GERACAO = findPrompt({
-      cod: "CONTEXTO_DE_GERACAO",
-    });
-
-    const CONTEXTO_VARIAVEIS_OMIE = findPrompt({
-      cod: "CONTEXTO_VARIAVEIS_OMIE",
-    });
-
-    const CONTEXTO_VARIAVEIS_TEMPLATE = findPrompt({
-      cod: "CONTEXTO_VARIAVEIS_TEMPLATE",
-    });
-
-    const CONTEXTO_VARIAVEIS_SISTEMA = findPrompt({
-      cod: "CONTEXTO_VARIAVEIS_SISTEMA",
-    });
-
-    const CONTEXTO_DE_IMAGEM = findPrompt({
-      cod: "CONTEXTO_DE_IMAGEM",
-    });
-
-    const CONTEXTO_DE_CHAT = findPrompt({
-      cod: "CONTEXTO_DE_CHAT",
-    });
-
-    const messages = [
-      MENSAGEM_DE_CONTEXTO_INICIALIZACAO,
-      CONTEXTO_DE_GERACAO,
-      {
-        role: CONTEXTO_VARIAVEIS_OMIE.role,
-        content: CONTEXTO_VARIAVEIS_OMIE.content + omieVar,
-      },
-      {
-        role: CONTEXTO_VARIAVEIS_TEMPLATE.role,
-        content: CONTEXTO_VARIAVEIS_TEMPLATE.content + templateEjs,
-      },
-      {
-        role: CONTEXTO_VARIAVEIS_SISTEMA.role,
-        content: CONTEXTO_VARIAVEIS_SISTEMA.content + systemVar,
-      },
-    ];
+    const orderedAndRefactoredMessages = concatenatedMessages
+      .sort((a, b) => a.ordem - b.ordem)
+      .map((e) => {
+        return { role: e.tipo, content: e.conteudo };
+      });
 
     if (!req.file) {
-      const chatMessage = {
-        role: CONTEXTO_DE_CHAT.role,
-        content: CONTEXTO_DE_CHAT.content + question,
-      };
+      if (!concatenatedMessages.some((e) => e.codigo === "CONTEXTO_DE_CHAT")) {
+        orderedAndRefactoredMessages.push({
+          role: "user",
+          content: question || "",
+        });
+      }
 
-      messages.push(chatMessage);
-      console.log("MESSAGES:", messages);
+      console.log("MENSAGENS ENVIADAS ->", orderedAndRefactoredMessages);
 
-      const response = await OpenIaService.openSession({ messages });
+      const response = await OpenIaService.openSession({
+        messages: orderedAndRefactoredMessages,
+      });
+      console.log("RESPONSE ->", response);
+
       return res.status(200).json({ message: "ok", data: response });
     }
 
-    const imageMessage = {
-      role: CONTEXTO_DE_IMAGEM.role,
-      content: [
-        {
-          type: "image_url",
-          image_url: {
-            url: `data:image/png;base64,${req.file.buffer.toString("base64")}`,
+    if (!concatenatedMessages.some((e) => e.codigo === "CONTEXTO_DE_IMAGEM")) {
+      orderedAndRefactoredMessages.push({
+        role: "user",
+        content: [
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:image/png;base64,${req.file.buffer.toString(
+                "base64"
+              )}`,
+            },
           },
-        },
-        { type: "text", text: CONTEXTO_DE_IMAGEM.content + question },
-      ],
-    };
+          { type: "text", text: question || "" },
+        ],
+      });
+    }
 
-    messages.push(imageMessage);
-    console.log("MESSAGES:", messages);
+    console.log("MENSAGENS ENVIADAS ->", orderedAndRefactoredMessages);
 
-    const response = await OpenIaService.openSession({ messages });
+    const response = await OpenIaService.openSession({
+      messages: orderedAndRefactoredMessages,
+    });
+
+    console.log("RESPONSE ->", response);
+
     return res.status(200).json({ message: "ok", data: response });
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
-
-// 1. => MENSAGEM_DE_CONTEXTO_INICIALIZACAO =>
-// 2. => CONTEXTO_DE_GERACAO =>
-
-// 5. => CONTEXTO_VARIAVEIS_OMIE (CONCATENAR COM CONTEÚDO RECEBIDO)
-// 6. => CONTEXTO_VARIAVEIS_TEMPLATE (CONCATENAR COM CONTEÚDO RECEBIDO)
-// 7. => CONTEXTO_VARIAVEIS_SYSTEMAA (CONCATENAR COM CONTEÚDO RECEBIDO)
-
-// 3. => CONTEXTO_DE_IMAGEM (SÓ QUANDO FOR IMAGEM, CONCATENAR COM TEXTO) =>
-// 4. => CONTEXTO_DE_CHAT (CONCATENAR) =>
