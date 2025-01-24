@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cst-rakuten-backend-service
-  namespace: default
+  name: ai-fatura-personalizada-service
+  namespace: fatura-personalizada-v2
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
-    app: cst-rakuten-backend
+    app: ai-fatura-personalizada
   ports:
     - name: http
       protocol: TCP
       port: 80
-      targetPort: 4000
+      targetPort: 3000
