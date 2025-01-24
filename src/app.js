@@ -6,7 +6,7 @@ import { env } from "./config/env.js";
 
 import { authMiddleware } from "./middlewares/auth.js";
 import { integracaoOpenIaRoute } from "./routes/integracaoOpenIa.js";
-import { authRouter } from "./routes/auth.js";
+import { statusRouter } from "./routes/status.js";
 import cookieParser from "cookie-parser";
 import { z } from "zod";
 
@@ -19,7 +19,7 @@ app.use(cors());
 app.use(helmet());
 if (env.NODE_ENV === "dev") app.use(morgan("dev"));
 
-app.use("/", authRouter);
+app.use("/", statusRouter);
 
 app.use(authMiddleware);
 app.use("/integracao", integracaoOpenIaRoute);
@@ -28,8 +28,6 @@ app.use((error, req, res, next) => {
   if (error instanceof z.ZodError) {
     return res.status(400).json({ errors: error.errors });
   }
-
-  console.log(error);
 
   return res.status(500).send("Algo deu errado!");
 });
