@@ -1,9 +1,11 @@
 name: Deploy fatura personalizada micro serviço de integração com openIa
 
 on:
-  push:
+  pull_request:
     branches:
-      - dev # Branch de destino para gerenciar releases
+      - main # Branch de destino para gerenciar releases
+    types:
+      - closed
 
 jobs:
   build_and_publish:
@@ -51,7 +53,7 @@ jobs:
 
       - name: 🚀 Substituir variáveis no deployment.yml e aplicar no cluster
         run: |
-          envsubst < infra/kubernetes/deployment.yaml
+          envsubst < infra/kubernetes/deployment.yaml | kubectl apply -f -
 
         env:
           IMAGE_TAG: ${{ env.TAG }}
