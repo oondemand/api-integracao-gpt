@@ -1,11 +1,9 @@
 name: Deploy fatura personalizada micro serviço de integração com openIa
 
 on:
-  pull_request:
+  push:
     branches:
-      - main # Branch de destino para gerenciar releases
-    types:
-      - closed
+      - dev # Branch de destino para gerenciar releases
 
 jobs:
   build_and_publish:
