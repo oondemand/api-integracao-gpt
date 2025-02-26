@@ -1,4 +1,4 @@
-name: Deploy doc-custom micro serviço de integração com openIa
+name: Deploy fatura personalizada micro serviço de integração com openIa
 
 on:
   pull_request:
@@ -58,3 +58,4 @@ jobs:
           IMAGE_TAG: ${{ env.TAG }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
           OPEN_IA_SECRET_KEY: ${{ secrets.OPEN_IA_SECRET_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
