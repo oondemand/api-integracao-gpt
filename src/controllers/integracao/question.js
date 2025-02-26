@@ -94,9 +94,19 @@ export const question = async (req, res, next) => {
       messages: orderedAndRefactoredMessages,
     });
 
-    console.log("RESPONSE ->", response);
-
-    return res.status(200).json({ message: "ok", data: response });
+    return res.status(200).json({
+      message: "ok",
+      data: {
+        response,
+        body: {
+          template: templateEjs,
+          conteudo: templateEjs,
+          omie: JSON.parse(omieVar),
+          sistema: JSON.parse(systemVar),
+        },
+        prompt: orderedAndRefactoredMessages,
+      },
+    });
   } catch (error) {
     console.log(error);
     next(error);
