@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-fatura-personalizada
-  namespace: fatura-personalizada-v2
+  name: ai-doc-custom
+  namespace: doc-custom
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai-fatura-personalizada
+      app: ai-doc-custom
   template:
     metadata:
       labels:
-        app: ai-fatura-personalizada
+        app: ai-doc-custom
     spec:
       containers:
-        - name: ai-fatura-personalizada-container
+        - name: ai-doc-custom-container
           image: ghcr.io/oondemand/api-integracao-gpt:${IMAGE_TAG}
           ports:
             - containerPort: 3000

@@ -1,4 +1,4 @@
-name: Deploy fatura personalizada micro serviço de integração com openIa
+name: Deploy doc-custom micro serviço de integração com openIa
 
 on:
   pull_request:
@@ -44,8 +44,7 @@ jobs:
       - name: Criar kubeconfig
         run: |
           mkdir -p "${HOME}/.kube"
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > "${HOME}/.kube/config"
-          cat "${HOME}/.kube/config"
+          curl -s -H "Authorization: Bearer ${{secrets.DO_ACCESS_TOKEN}}" "${{secrets.DO_CLUSTER_AUTHENTICATION_URL}}" > "$HOME/.kube/config"
 
       - name: Usar contexto do cluster
         run: |
@@ -53,7 +52,7 @@ jobs:
 
       - name: 🚀 Substituir variáveis no deployment.yml e aplicar no cluster
         run: |
-          envsubst < infra/kubernetes/deployment.yaml
+          envsubst < infra/kubernetes/deployment.yaml | kubectl apply -f -
 
         env:
           IMAGE_TAG: ${{ env.TAG }}

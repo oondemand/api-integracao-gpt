@@ -2,11 +2,11 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: app-tls
-  namespace: fatura-personalizada-v2
+  namespace: doc-custom
 spec:
   secretName: app-tls
   issuerRef:
     name: letsencrypt-nginx
     kind: ClusterIssuer
   dnsNames:
-    - ai.fatura-personalizada.oondemand.com.br
+    - ai.doc-custom.oondemand.com.br
