@@ -88,8 +88,6 @@ export const question = async (req, res, next) => {
       orderedAndRefactoredMessages.push(imageMessage);
     }
 
-    console.log("MENSAGENS ENVIADAS ->", orderedAndRefactoredMessages);
-
     const response = await OpenIaService.openSession({
       messages: orderedAndRefactoredMessages,
     });
