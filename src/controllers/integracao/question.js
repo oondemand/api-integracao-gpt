@@ -37,8 +37,10 @@ export const question = async (req, res, next) => {
 
     const concatenatedMessages = [];
 
+    console.log("REQ.FILES:", req.files);
+
     for (const prompt of prompts) {
-      if (req.file && prompt.codigo === "CONTEXTO_DE_IMAGEM") {
+      if (req.files && prompt.codigo === "CONTEXTO_DE_IMAGEM") {
         continue;
       }
 
@@ -65,27 +67,48 @@ export const question = async (req, res, next) => {
         return { role: e.tipo, content: e.conteudo };
       });
 
-    if (req.file) {
+    if (req.files) {
       const imgContext = prompts.find(
         (e) => e?.codigo === "CONTEXTO_DE_IMAGEM"
       )?.conteudo;
 
-      const imageMessage = {
-        role: "user",
-        content: [
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/png;base64,${req.file.buffer.toString(
+      for (const file of req.files) {
+        if (file.mimetype.includes("image")) {
+          const imageMessage = {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${file.mimetype};base64,${file.buffer.toString(
+                    "base64"
+                  )}`,
+                },
+              },
+              { type: "text", text: imgContext || question || "" },
+            ],
+          };
+
+          orderedAndRefactoredMessages.push(imageMessage);
+          continue;
+        }
+
+        const imageMessage = {
+          role: "user",
+          content: [
+            {
+              type: "file",
+              filename: file?.originalname,
+              file_data: `data:${file.mimetype};base64,${file.buffer.toString(
                 "base64"
               )}`,
             },
-          },
-          { type: "text", text: imgContext || question || "" },
-        ],
-      };
+            { type: "text", text: question || "" },
+          ],
+        };
 
-      orderedAndRefactoredMessages.push(imageMessage);
+        orderedAndRefactoredMessages.push(imageMessage);
+      }
     }
 
     const response = await OpenIaService.openSession({
