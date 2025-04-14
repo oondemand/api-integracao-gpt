@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { OpenIaService } from "../../service/openia.js";
 import ejs from "ejs";
+import { Template } from "../../utils/template.js";
 
 const promptSchema = z.object({
   codigo: z.string().optional(),
@@ -37,16 +38,13 @@ export const question = async (req, res, next) => {
 
     const concatenatedMessages = [];
 
-    console.log("REQ.FILES:", req.files);
-
     for (const prompt of prompts) {
       if (req.files && prompt.codigo === "CONTEXTO_DE_IMAGEM") {
         continue;
       }
 
-      const template = await ejs.render(
-        prompt?.conteudo,
-        {
+      const template = Template.build({
+        data: {
           ...JSON.parse(omieVar),
           ...JSON.parse(systemVar),
           template: templateEjs,
@@ -54,8 +52,8 @@ export const question = async (req, res, next) => {
           omie: JSON.parse(omieVar),
           sistema: JSON.parse(systemVar),
         },
-        { async: true }
-      );
+        template: prompt?.conteudo,
+      });
 
       prompt.conteudo = template;
       concatenatedMessages.push(prompt);
