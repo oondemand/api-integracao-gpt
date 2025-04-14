@@ -13,6 +13,7 @@ const promptSchema = z.object({
 });
 
 const bodySchema = z.object({
+  modelo: z.string().optional(),
   question: z
     .string({ message: "A pergunta é um campo obrigatório!" })
     .optional(),
@@ -33,7 +34,7 @@ const bodySchema = z.object({
 
 export const question = async (req, res, next) => {
   try {
-    const { question, templateEjs, omieVar, systemVar, prompts } =
+    const { question, templateEjs, omieVar, systemVar, prompts, modelo } =
       bodySchema.parse(req.body);
 
     const concatenatedMessages = [];
@@ -111,6 +112,7 @@ export const question = async (req, res, next) => {
 
     const response = await OpenIaService.openSession({
       messages: orderedAndRefactoredMessages,
+      model: modelo,
     });
 
     return res.status(200).json({
