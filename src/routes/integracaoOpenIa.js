@@ -7,6 +7,7 @@ const integracaoOpenIaRoute = express.Router();
 const storage = multer.memoryStorage({});
 
 const fileFilter = (req, file, cb) => {
+  return cb(null, true); // aceitando todos os tipos
   const VALID_TYPES = ["image/png", "image/jpg", "image/jpeg"];
   if (VALID_TYPES.includes(file.mimetype)) {
     cb(null, true);
@@ -18,13 +19,13 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 mb
 });
 
 integracaoOpenIaRoute.post("/create-stream", IntegracaoController.createStream);
 integracaoOpenIaRoute.post(
   "/question",
-  upload.single("file"),
+  upload.array("file"),
   IntegracaoController.question
 );
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { OpenIaService } from "../../service/openia.js";
 import ejs from "ejs";
+import { Template } from "../../utils/template.js";
 
 const promptSchema = z.object({
   codigo: z.string().optional(),
@@ -12,6 +13,7 @@ const promptSchema = z.object({
 });
 
 const bodySchema = z.object({
+  modelo: z.string().optional(),
   question: z
     .string({ message: "A pergunta é um campo obrigatório!" })
     .optional(),
@@ -32,19 +34,18 @@ const bodySchema = z.object({
 
 export const question = async (req, res, next) => {
   try {
-    const { question, templateEjs, omieVar, systemVar, prompts } =
+    const { question, templateEjs, omieVar, systemVar, prompts, modelo } =
       bodySchema.parse(req.body);
 
     const concatenatedMessages = [];
 
     for (const prompt of prompts) {
-      if (req.file && prompt.codigo === "CONTEXTO_DE_IMAGEM") {
+      if (req.files && prompt.codigo === "CONTEXTO_DE_IMAGEM") {
         continue;
       }
 
-      const template = await ejs.render(
-        prompt?.conteudo,
-        {
+      const template = Template.build({
+        data: {
           ...JSON.parse(omieVar),
           ...JSON.parse(systemVar),
           template: templateEjs,
@@ -52,8 +53,8 @@ export const question = async (req, res, next) => {
           omie: JSON.parse(omieVar),
           sistema: JSON.parse(systemVar),
         },
-        { async: true }
-      );
+        template: prompt?.conteudo,
+      });
 
       prompt.conteudo = template;
       concatenatedMessages.push(prompt);
@@ -65,31 +66,53 @@ export const question = async (req, res, next) => {
         return { role: e.tipo, content: e.conteudo };
       });
 
-    if (req.file) {
+    if (req.files) {
       const imgContext = prompts.find(
         (e) => e?.codigo === "CONTEXTO_DE_IMAGEM"
       )?.conteudo;
 
-      const imageMessage = {
-        role: "user",
-        content: [
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/png;base64,${req.file.buffer.toString(
+      for (const file of req.files) {
+        if (file.mimetype.includes("image")) {
+          const imageMessage = {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${file.mimetype};base64,${file.buffer.toString(
+                    "base64"
+                  )}`,
+                },
+              },
+              { type: "text", text: imgContext || question || "" },
+            ],
+          };
+
+          orderedAndRefactoredMessages.push(imageMessage);
+          continue;
+        }
+
+        const imageMessage = {
+          role: "user",
+          content: [
+            {
+              type: "file",
+              filename: file?.originalname,
+              file_data: `data:${file.mimetype};base64,${file.buffer.toString(
                 "base64"
               )}`,
             },
-          },
-          { type: "text", text: imgContext || question || "" },
-        ],
-      };
+            { type: "text", text: question || "" },
+          ],
+        };
 
-      orderedAndRefactoredMessages.push(imageMessage);
+        orderedAndRefactoredMessages.push(imageMessage);
+      }
     }
 
     const response = await OpenIaService.openSession({
       messages: orderedAndRefactoredMessages,
+      model: modelo,
     });
 
     return res.status(200).json({
