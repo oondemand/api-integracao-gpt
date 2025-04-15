@@ -9,10 +9,22 @@ export const Template = {
 
       return template.replace(PLACEHOLDER_REGEX, (match, variablePath) => {
         const cleanPath = variablePath.trim().split(".");
-
         const value = cleanPath.reduce((cur, key) => cur?.[key], data);
 
-        return value !== undefined ? String(value) : match;
+        if (value === undefined) {
+          return match;
+        }
+
+        if (typeof value === "object" && value !== null) {
+          try {
+            return JSON.stringify(value);
+          } catch (error) {
+            console.error("Erro ao serializar objeto:", error);
+            return match;
+          }
+        } else {
+          return String(value);
+        }
       });
     } catch (error) {
       console.log("ERROR", error);
