@@ -92,21 +92,21 @@ export const question = async (req, res, next) => {
           continue;
         }
 
-        // const fileMessage = {
-        //   role: "user",
-        //   content: [
-        //     {
-        //       type: "file",
-        //       filename: file?.originalname,
-        //       file_data: `data:${file.mimetype};base64,${file.buffer.toString(
-        //         "base64"
-        //       )}`,
-        //     },
-        //     { type: "text", text: question || "" },
-        //   ],
-        // };
+        const fileMessage = {
+          role: "user",
+          content: [
+            {
+              type: "file",
+              filename: file?.originalname,
+              file_data: `data:${file.mimetype};base64,${file.buffer.toString(
+                "base64"
+              )}`,
+            },
+            { type: "text", text: question || "" },
+          ],
+        };
 
-        // orderedAndRefactoredMessages.push(fileMessage);
+        orderedAndRefactoredMessages.push(fileMessage);
       }
     }
 
