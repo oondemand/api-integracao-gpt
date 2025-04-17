@@ -40,7 +40,7 @@ export const question = async (req, res, next) => {
     const concatenatedMessages = [];
 
     for (const prompt of prompts) {
-      if (req.files && prompt.codigo === "CONTEXTO_DE_IMAGEM") {
+      if (req.files && prompt.codigo.toUpperCase() === "CONTEXTO_DE_IMAGEM") {
         continue;
       }
 
@@ -92,22 +92,29 @@ export const question = async (req, res, next) => {
           continue;
         }
 
-        const imageMessage = {
-          role: "user",
-          content: [
-            {
-              type: "file",
-              filename: file?.originalname,
-              file_data: `data:${file.mimetype};base64,${file.buffer.toString(
-                "base64"
-              )}`,
-            },
-            { type: "text", text: question || "" },
-          ],
-        };
+        // const fileMessage = {
+        //   role: "user",
+        //   content: [
+        //     {
+        //       type: "file",
+        //       filename: file?.originalname,
+        //       file_data: `data:${file.mimetype};base64,${file.buffer.toString(
+        //         "base64"
+        //       )}`,
+        //     },
+        //     { type: "text", text: question || "" },
+        //   ],
+        // };
 
-        orderedAndRefactoredMessages.push(imageMessage);
+        // orderedAndRefactoredMessages.push(fileMessage);
       }
+    }
+
+    if (question) {
+      orderedAndRefactoredMessages.push({
+        role: "user",
+        content: question,
+      });
     }
 
     const response = await OpenIaService.openSession({
