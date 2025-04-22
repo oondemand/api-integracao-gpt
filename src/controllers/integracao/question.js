@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { OpenIaService } from "../../service/openia.js";
-import ejs from "ejs";
 import { Template } from "../../utils/template.js";
 
 const promptSchema = z.object({
@@ -84,29 +83,31 @@ export const question = async (req, res, next) => {
                   )}`,
                 },
               },
-              { type: "text", text: imgContext || question || "" },
+              { type: "text", text: imgContext || "" },
             ],
           };
 
           orderedAndRefactoredMessages.push(imageMessage);
           continue;
+        } else {
+          const fileMessage = {
+            role: "user",
+            content: [
+              {
+                type: "file",
+                file: {
+                  filename: file.originalname,
+                  file_data: `data:${
+                    file.mimetype
+                  };base64,${file.buffer.toString("base64")}`,
+                },
+              },
+              { type: "text", text: "" },
+            ],
+          };
+
+          orderedAndRefactoredMessages.push(fileMessage);
         }
-
-        const fileMessage = {
-          role: "user",
-          content: [
-            {
-              type: "file",
-              filename: file?.originalname,
-              file_data: `data:${file.mimetype};base64,${file.buffer.toString(
-                "base64"
-              )}`,
-            },
-            { type: "text", text: question || "" },
-          ],
-        };
-
-        orderedAndRefactoredMessages.push(fileMessage);
       }
     }
 
