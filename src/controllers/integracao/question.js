@@ -83,7 +83,7 @@ export const question = async (req, res, next) => {
                   )}`,
                 },
               },
-              { type: "text", text: imgContext || question || "" },
+              { type: "text", text: imgContext || "" },
             ],
           };
 
@@ -102,7 +102,7 @@ export const question = async (req, res, next) => {
                   };base64,${file.buffer.toString("base64")}`,
                 },
               },
-              { type: "text", text: question || "" },
+              { type: "text", text: "" },
             ],
           };
 
