@@ -28,4 +28,10 @@ integracaoOpenIaRoute.post(
   IntegracaoController.question
 );
 
+integracaoOpenIaRoute.post(
+  "/cst/question",
+  upload.array("file"),
+  IntegracaoController.cst
+);
+
 export { integracaoOpenIaRoute };
