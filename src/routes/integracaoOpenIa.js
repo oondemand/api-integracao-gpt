@@ -22,7 +22,6 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 mb
 });
 
-integracaoOpenIaRoute.post("/create-stream", IntegracaoController.createStream);
 integracaoOpenIaRoute.post(
   "/question",
   upload.array("file"),
