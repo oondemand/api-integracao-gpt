@@ -14,7 +14,7 @@ const promptSchema = z.object({
 const bodySchema = z.object({
   modelo: z.string().optional(),
   question: z.string().optional(),
-  data: z.object().optional(),
+  data: z.string().optional(),
   prompts: z.string().transform((val) => {
     try {
       const parsed = JSON.parse(val);
@@ -37,7 +37,7 @@ export const cst = async (req, res, next) => {
       }
 
       const template = Template.build({
-        data,
+        data: { data: JSON.parse(data) },
         template: prompt?.conteudo,
       });
 
