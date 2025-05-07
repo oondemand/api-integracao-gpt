@@ -89,8 +89,11 @@ export const cst = async (req, res, next) => {
       }
 
       if (prompt?.tipoConteudo && prompt?.tipoConteudo === "objetoJson") {
+        delete data.arquivos;
+        delete data.documentosFiscais;
+
         const template = Template.build({
-          data: { ...data, arquivos: [], documentosFiscais: [] },
+          data: { ...data },
           template: prompt?.conteudo,
         });
 
