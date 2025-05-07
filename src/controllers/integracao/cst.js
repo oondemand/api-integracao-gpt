@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { OpenIaService } from "../../service/openia.js";
 import { Template } from "../../utils/template.js";
+import { acessarPropriedade } from "../../utils/helpers.js";
 
 const promptSchema = z.object({
   codigo: z.string().optional(),
@@ -9,20 +10,14 @@ const promptSchema = z.object({
   nome: z.string().optional(),
   ordem: z.number(),
   tipo: z.string(),
+  tipoConteudo: z.string().optional(),
 });
 
 const bodySchema = z.object({
   modelo: z.string().optional(),
   question: z.string().optional(),
-  data: z.string().optional(),
-  prompts: z.string().transform((val) => {
-    try {
-      const parsed = JSON.parse(val);
-      return z.array(promptSchema).parse(parsed);
-    } catch (error) {
-      throw new Error("Invalid JSON format");
-    }
-  }),
+  data: z.any().optional(),
+  prompts: z.array(promptSchema),
 });
 
 export const cst = async (req, res, next) => {
@@ -32,80 +27,91 @@ export const cst = async (req, res, next) => {
     const concatenatedMessages = [];
 
     for (const prompt of prompts) {
-      if (req.files && prompt.codigo.toUpperCase() === "CONTEXTO_DE_IMAGEM") {
+      if (question && prompt?.codigo?.toUpperCase() === "CONTEXTO_DE_CHAT") {
         continue;
       }
 
-      const template = Template.build({
-        data: { data: JSON.parse(data) },
-        template: prompt?.conteudo,
-      });
+      if (prompt?.tipoConteudo && prompt?.tipoConteudo === "arquivo") {
+        let arquivos = acessarPropriedade({ data }, prompt?.conteudo);
 
-      prompt.conteudo = template;
-      concatenatedMessages.push(prompt);
-    }
+        if (!Array.isArray(arquivos)) {
+          arquivos = [arquivos];
+        }
 
-    const orderedAndRefactoredMessages = concatenatedMessages
-      .sort((a, b) => a.ordem - b.ordem)
-      .map((e) => {
-        return { role: e.tipo, content: e.conteudo };
-      });
+        const fileMessage = {
+          role: "user",
+          content: [],
+        };
 
-    if (req.files) {
-      const imgContext = prompts.find(
-        (e) => e?.codigo === "CONTEXTO_DE_IMAGEM"
-      )?.conteudo;
+        for (const arquivo of arquivos) {
+          if ("buffer" in arquivo) {
+            if (arquivo?.mimetype.includes("image")) {
+              const buffer = new Buffer(arquivo.buffer.data);
 
-      for (const file of req.files) {
-        if (file.mimetype.includes("image")) {
-          const imageMessage = {
-            role: "user",
-            content: [
-              {
+              fileMessage.content.push({
                 type: "image_url",
                 image_url: {
-                  url: `data:${file.mimetype};base64,${file.buffer.toString(
+                  url: `data:${arquivo.mimetype};base64,${buffer.toString(
                     "base64"
                   )}`,
                 },
-              },
-              { type: "text", text: imgContext || "" },
-            ],
-          };
+              });
 
-          orderedAndRefactoredMessages.push(imageMessage);
-          continue;
-        } else {
-          const fileMessage = {
-            role: "user",
-            content: [
-              {
+              concatenatedMessages.push(fileMessage);
+            }
+
+            if (arquivo?.mimetype.includes("pdf")) {
+              const buffer = new Buffer(arquivo.buffer.data);
+
+              fileMessage.content.push({
                 type: "file",
                 file: {
-                  filename: file.originalname,
-                  file_data: `data:${
-                    file.mimetype
-                  };base64,${file.buffer.toString("base64")}`,
+                  filename: arquivo.nomeOriginal,
+                  file_data: `data:${arquivo.mimetype};base64,${buffer.toString(
+                    "base64"
+                  )}`,
                 },
-              },
-              { type: "text", text: "" },
-            ],
-          };
+              });
 
-          orderedAndRefactoredMessages.push(fileMessage);
+              concatenatedMessages.push(fileMessage);
+            }
+          }
         }
+      }
+
+      if (prompt?.tipoConteudo && prompt?.tipoConteudo === "texto") {
+        const textMessage = {
+          role: prompt?.tipo,
+          content: prompt?.conteudo,
+        };
+
+        concatenatedMessages.push(textMessage);
+      }
+
+      if (prompt?.tipoConteudo && prompt?.tipoConteudo === "objetoJson") {
+        const template = Template.build({
+          data: { ...data, arquivos: [], documentosFiscais: [] },
+          template: prompt?.conteudo,
+        });
+
+        const message = {
+          role: prompt?.tipo,
+          content: template,
+        };
+
+        concatenatedMessages.push(message);
       }
     }
 
     if (question) {
-      orderedAndRefactoredMessages.push({
+      concatenatedMessages.push({
         role: "user",
         content: question,
       });
     }
 
     const response = await OpenIaService.openSession({
-      messages: orderedAndRefactoredMessages,
+      messages: concatenatedMessages,
       model: modelo,
     });
 
@@ -114,7 +120,7 @@ export const cst = async (req, res, next) => {
       data: {
         response,
         body: data,
-        prompt: orderedAndRefactoredMessages,
+        prompt: concatenatedMessages,
       },
     });
   } catch (error) {
