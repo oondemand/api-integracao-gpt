@@ -93,7 +93,7 @@ export const cst = async (req, res, next) => {
         delete data.documentosFiscais;
 
         const template = Template.build({
-          data: { ...data },
+          data: { data },
           template: prompt?.conteudo,
         });
 
