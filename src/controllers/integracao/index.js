@@ -1,7 +1,7 @@
-import { createStream } from "./create-stream.js";
 import { question } from "./question.js";
+import { cst } from "./cst.js";
 
 export const IntegracaoController = {
-  createStream,
   question,
+  cst,
 };

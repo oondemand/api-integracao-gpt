@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { env } from "./config/env.js";
+import multer from "multer";
 
 import { authMiddleware } from "./middlewares/auth.js";
 import { integracaoOpenIaRoute } from "./routes/integracaoOpenIa.js";
@@ -25,6 +26,10 @@ app.use(authMiddleware);
 app.use("/integracao", integracaoOpenIaRoute);
 
 app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    return res.status(400).json({ errors: error.errors });
+  }
+
   if (error instanceof z.ZodError) {
     return res.status(400).json({ errors: error.errors });
   }

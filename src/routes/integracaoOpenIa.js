@@ -19,14 +19,19 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 mb
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 mb
 });
 
-integracaoOpenIaRoute.post("/create-stream", IntegracaoController.createStream);
 integracaoOpenIaRoute.post(
   "/question",
   upload.array("file"),
   IntegracaoController.question
+);
+
+integracaoOpenIaRoute.post(
+  "/cst/question",
+  // upload.array("file"),
+  IntegracaoController.cst
 );
 
 export { integracaoOpenIaRoute };

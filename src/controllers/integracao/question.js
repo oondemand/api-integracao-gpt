@@ -83,7 +83,6 @@ export const question = async (req, res, next) => {
                   )}`,
                 },
               },
-              { type: "text", text: imgContext || "" },
             ],
           };
 
@@ -102,7 +101,6 @@ export const question = async (req, res, next) => {
                   };base64,${file.buffer.toString("base64")}`,
                 },
               },
-              { type: "text", text: "" },
             ],
           };
 
@@ -117,6 +115,8 @@ export const question = async (req, res, next) => {
         content: question,
       });
     }
+
+    console.log("LOG ->", orderedAndRefactoredMessages);
 
     const response = await OpenIaService.openSession({
       messages: orderedAndRefactoredMessages,
