@@ -34,7 +34,7 @@ app.use((error, req, res, next) => {
     return res.status(400).json({ errors: error.errors });
   }
 
-  return res.status(500).send("Algo deu errado!");
+  return res.status(500).send("Algum erro inesperado ocorreu!");
 });
 
 export { app };
