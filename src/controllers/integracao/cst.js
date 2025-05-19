@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { OpenIaService } from "../../service/openia.js";
 import { Template } from "../../utils/template.js";
-import {
-  acessarPropriedade,
-  removeBufferFromObjMap,
-} from "../../utils/helpers.js";
+import { acessarPropriedade } from "../../utils/helpers.js";
 
 const promptSchema = z.object({
   codigo: z.string().optional(),
@@ -92,7 +89,9 @@ export const cst = async (req, res, next) => {
       }
 
       if (prompt?.tipoConteudo && prompt?.tipoConteudo === "objetoJson") {
-        removeBufferFromObjMap(data);
+        data?.arquivos && delete data.arquivos;
+        data?.documentosFiscais && delete data.documentosFiscais;
+        data?.documentosCadastrais && delete data.documentosCadastrais;
 
         const template = Template.build({
           data: { data },
