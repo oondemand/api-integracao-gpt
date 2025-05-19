@@ -90,6 +90,7 @@ export const cst = async (req, res, next) => {
 
       if (prompt?.tipoConteudo && prompt?.tipoConteudo === "objetoJson") {
         data?.arquivos && delete data.arquivos;
+        data?.arquivo && delete data.arquivo;
         data?.documentosFiscais && delete data.documentosFiscais;
         data?.documentosCadastrais && delete data.documentosCadastrais;
 
