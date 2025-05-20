@@ -23,7 +23,7 @@ const bodySchema = z.object({
   }),
   prompts: z.string().transform((val) => {
     try {
-      const parsed = JSON.parse(val);
+      const parsed = JSON?.parse(val);
       return z.array(promptSchema).parse(parsed);
     } catch (error) {
       throw new Error("Invalid JSON format");
@@ -45,12 +45,12 @@ export const question = async (req, res, next) => {
 
       const template = Template.build({
         data: {
-          ...JSON.parse(omieVar),
-          ...JSON.parse(systemVar),
+          ...json?.parse(omieVar),
+          ...json?.parse(systemVar),
           template: templateEjs,
           conteudo: templateEjs,
-          omie: JSON.parse(omieVar),
-          sistema: JSON.parse(systemVar),
+          omie: json?.parse(omieVar),
+          sistema: json?.parse(systemVar),
         },
         template: prompt?.conteudo,
       });
@@ -130,8 +130,8 @@ export const question = async (req, res, next) => {
         body: {
           template: templateEjs,
           conteudo: templateEjs,
-          omie: JSON.parse(omieVar),
-          sistema: JSON.parse(systemVar),
+          omie: json?.parse(omieVar),
+          sistema: json?.parse(systemVar),
         },
         prompt: orderedAndRefactoredMessages,
       },
