@@ -27,7 +27,7 @@ export const Template = {
         }
       });
     } catch (error) {
-      console.log("ERROR", error);
+      console.log(error);
       throw error;
     }
   },

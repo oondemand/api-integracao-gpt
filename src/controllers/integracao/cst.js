@@ -44,7 +44,7 @@ export const cst = async (req, res, next) => {
         };
 
         for (const arquivo of arquivos) {
-          if ("buffer" in arquivo) {
+          if (typeof arquivo === "object" && "buffer" in arquivo) {
             if (arquivo?.mimetype.includes("image")) {
               const buffer = new Buffer(arquivo.buffer.data);
 
@@ -89,8 +89,10 @@ export const cst = async (req, res, next) => {
       }
 
       if (prompt?.tipoConteudo && prompt?.tipoConteudo === "objetoJson") {
-        delete data.arquivos;
-        delete data.documentosFiscais;
+        data?.arquivos && delete data.arquivos;
+        data?.arquivo && delete data.arquivo;
+        data?.documentosFiscais && delete data.documentosFiscais;
+        data?.documentosCadastrais && delete data.documentosCadastrais;
 
         const template = Template.build({
           data: { data },
