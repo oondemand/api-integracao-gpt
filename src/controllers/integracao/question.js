@@ -116,8 +116,6 @@ export const question = async (req, res, next) => {
       });
     }
 
-    console.log("LOG ->", orderedAndRefactoredMessages);
-
     const response = await OpenIaService.openSession({
       messages: orderedAndRefactoredMessages,
       model: modelo,
