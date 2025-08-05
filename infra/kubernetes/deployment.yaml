@@ -27,8 +27,8 @@ spec:
               value: "${JWT_SECRET}"
           resources:
             requests:
-              memory: "256Mi"
+              memory: "128Mi"
               cpu: "0.1"
             limits:
-              memory: "2048Mi"
-              cpu: "2"
+              memory: "256Mi"
+              cpu: "0.2"
